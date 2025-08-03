@@ -1,0 +1,62 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n-automation
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Basic Auth
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin123
+      
+      # Server Configuration
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      
+      # Database (using SQLite for simplicity)
+      - DB_TYPE=sqlite
+      - DB_SQLITE_DATABASE=/home/node/.n8n/database.sqlite
+      
+      # Webhook Configuration
+      - N8N_WEBHOOK_URL=https://916ceee5b4ed.ngrok-free.app
+      
+      # Security
+      - N8N_ENCRYPTION_KEY=your-encryption-key-here
+      
+      # Logging
+      - N8N_LOG_LEVEL=info
+      
+      # Timezone
+      - GENERIC_TIMEZONE=UTC
+      
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/home/node/.n8n/workflows
+      - ./credentials:/home/node/.n8n/credentials
+      
+    networks:
+      - n8n-network
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: n8n-ngrok
+    restart: unless-stopped
+    ports:
+      - "4040:4040"
+    environment:
+      - NGROK_AUTHTOKEN=30VKJa0DsBD4jR6FQl0M1LTsjQn_7Rdm7TzoN8sPwkzuDo9G1
+    command: http n8n:5678
+    depends_on:
+      - n8n
+    networks:
+      - n8n-network
+
+volumes:
+  n8n_data:
+
+networks:
+  n8n-network:
+    driver: bridge
